@@ -19,7 +19,7 @@ def coords_grid(flow: Tensor) -> Tensor:
     B, _, H, W = flow.shape
     xx = torch.arange(0, W, device=flow.device, requires_grad=False)
     yy = torch.arange(0, H, device=flow.device, requires_grad=False)
-    coords = torch.meshgrid(yy, xx)
+    coords = torch.meshgrid(yy, xx, indexing="ij")
     coords = torch.stack(coords[::-1], dim=0).float()
     grid = coords[None].repeat(B, 1, 1, 1) + flow
     grid[:, 0, ...] = grid[:, 0, ...] * 2. / max(W - 1, 1) - 1.

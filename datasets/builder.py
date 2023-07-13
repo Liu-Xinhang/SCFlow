@@ -2,7 +2,7 @@ from mmcv.utils import Registry, build_from_cfg
 from torch.utils.data import ConcatDataset
 
 DATASETS = Registry('dataset')
-PIPELINES = Registry('pipeline')
+# PIPELINES = Registry('pipeline')
 DATASETS.register_module(name='ConcatDataset', module=ConcatDataset)
 
 def build_dataset(cfg):

@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from glob import glob
 from os import path as osp
+import tqdm
 from iopath.common.file_io import PathManager
 from pytorch3d.structures import join_meshes_as_batch
 from pytorch3d.renderer import (
@@ -10,7 +11,8 @@ from pytorch3d.renderer import (
     HardPhongShader, SoftPhongShader, HardGouraudShader, SoftGouraudShader, SoftSilhouetteShader,
     HardFlatShader)
 from pytorch3d.renderer.mesh.renderer import MeshRendererWithFragments
-from pytorch3d.io.ply_io import MeshPlyFormat
+
+from pytorch3d.io import load_objs_as_meshes
 from torchvision.utils import save_image
 
 def cameras_from_opencv_projection(
@@ -61,9 +63,10 @@ def cameras_from_opencv_projection(
 
 
 def load_mesh(f, path_manager=None):
-    if path_manager is None:
-        path_manager = PathManager()
-    mesh = MeshPlyFormat().read(f, include_textures=True, device='cpu', path_manager=path_manager)
+    # if path_manager is None:
+    #     path_manager = PathManager()
+    mesh = load_objs_as_meshes([f], device='cpu')
+    # mesh = MeshPlyFormat().read(f, include_textures=True, device='cpu', path_manager=path_manager)
     return mesh
 
 
@@ -105,7 +108,7 @@ class Renderer(nn.Module):
         self.sigma = sigma
         self.background_color = background_color
         self.shader = shader_mapping[self.shader_type][self.blending]
-        self.load_meshes(mesh_dir)
+        self.load_meshes(mesh_dir, ".obj")
         self.default_lights = default_lights
         self.seperate_lights = seperate_lights
         self.bin_size = bin_size
@@ -126,9 +129,11 @@ class Renderer(nn.Module):
             mesh_paths = [mesh_dir]
         mesh_paths = sorted(mesh_paths)
         self.meshes = dict()
-        for mesh_path in mesh_paths:
-            obj_label = int(osp.basename(mesh_path).split('.')[0].split('_')[-1])-1
-            self.meshes[obj_label] = load_mesh(mesh_path)
+        with tqdm.tqdm(total=len(mesh_paths), desc="loading model...") as pbar:
+            for mesh_path in mesh_paths:
+                obj_label = int(osp.basename(mesh_path).split('.')[0].split('_')[-1])-1
+                self.meshes[obj_label] = load_mesh(mesh_path)
+                pbar.update(1)
             
     def _init_renderer(self, device):
         self.raster_settings = RasterizationSettings(

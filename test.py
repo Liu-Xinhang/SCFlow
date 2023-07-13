@@ -45,6 +45,7 @@ def parse_args():
         help='custom options for formating results, the key-value pair in xxx=yyy'
     )
     parser.add_argument('--local_rank', type=int, default=0)
+    parser.add_argument('--out', type=str, default=None)
     args = parser.parse_args()
     return args
 

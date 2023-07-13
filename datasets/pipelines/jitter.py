@@ -42,7 +42,7 @@ class PoseJitter:
         self.translation_limit = translation_limit
         self.add_limit = add_limit
         if add_limit is not None:
-            assert mesh_dir is not None and mesh_vertices is not None
+            assert mesh_dir is not None
             self.meshes = load_mesh(mesh_dir)
             mesh_vertices = [mesh.vertices.view(np.ndarray).astype(np.float32) for mesh in self.meshes]
             self.mesh_vertices = [vertices[np.random.choice(vertices.shape[0], 1000)] for vertices in mesh_vertices]

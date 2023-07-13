@@ -4,6 +4,7 @@ from functools import partial
 from os import path as osp
 import warnings
 import torch
+torch.multiprocessing.set_sharing_strategy('file_system')
 import mmcv
 from mmcv import Config
 from mmcv.utils import get_logger
@@ -16,11 +17,8 @@ from mmcv.runner import (
 from torch.utils.data import DataLoader, DistributedSampler, RandomSampler, SequentialSampler
 
 from models import build_refiner
-from datasets import build_dataset, MultiSourceSampler
+from datasets import build_dataset
 from tools.eval import single_gpu_test, multi_gpu_test
-
-
-
 
 
 def build_eval_hook(cfg, distributed, dataloader):

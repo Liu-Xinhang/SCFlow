@@ -102,7 +102,7 @@ val_pipeline = [
 data = dict(
     samples_per_gpu=16,
     workers_per_gpu=8,
-    test_samples_per_gpu=1,
+    test_samples_per_gpu=16,
     train=dict(
         type='SuperviseTrainDataset',
         data_root=dataset_root + '/train_real',
@@ -131,7 +131,7 @@ data = dict(
         mesh_diameter=mesh_diameter,
     ),
     test=dict(
-        type='RefineTestDataset',
+        type='RefineDataset',
         data_root=dataset_root + '/test',
         ref_annots_root='data/initial_poses/ycbv_posecnn',
         image_list=dataset_root + '/image_lists/test.txt',
@@ -150,7 +150,7 @@ data = dict(
 # renderer setting
 model = dict(
     renderer=dict(
-        mesh_dir=dataset_root + '/models_1024',
+        mesh_dir=dataset_root + '/models_obj',
         image_size=(image_scale, image_scale),
         shader_type='Phong',
         soft_blending=False,

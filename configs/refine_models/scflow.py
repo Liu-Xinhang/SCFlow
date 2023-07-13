@@ -131,13 +131,13 @@ lr_config = dict(
     anneal_strategy='linear')
 evaluation=dict(interval=5000, 
                 metric={
-                    'auc':[],
+                    # 'auc':[],
                     'add':[0.05, 0.10, 0.20, 0.50]},
                 save_best='average/add_10',
                 rule='greater'
             )
 runner = dict(type='IterBasedRunner', max_iters=100000)
-num_gpus = 1
+num_gpus = 4
 checkpoint_config = dict(interval=10000, by_epoch=False)
 log_config=dict(interval=50, 
                 hooks=[

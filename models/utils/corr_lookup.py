@@ -22,7 +22,7 @@ def coords_grid(batch: int, xx: Tensor, yy: Tensor) -> Tensor:
         Tensor: Tensor of shape (batch, 2, H, W) with values of items'
             coordinate.
     """
-    coords = torch.meshgrid(yy, xx)
+    coords = torch.meshgrid(yy, xx, indexing="ij")
     coords = torch.stack(coords[::-1], dim=0).float()
 
     return coords[None].repeat(batch, 1, 1, 1)  # shape(batch, 2, H, W)
@@ -119,7 +119,7 @@ class CorrLookup(nn.Module):
             -self.r, self.r, 2 * self.r + 1, device=flow.device)
         dy = torch.linspace(
             -self.r, self.r, 2 * self.r + 1, device=flow.device)
-        delta = torch.stack(torch.meshgrid(dy, dx), axis=-1)
+        delta = torch.stack(torch.meshgrid(dy, dx, indexing="ij"), axis=-1)
         delta_lvl = delta.view(1, 2 * self.r + 1, 2 * self.r + 1, 2)
 
         out_corr_pyramid = []

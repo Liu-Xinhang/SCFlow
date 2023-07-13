@@ -97,7 +97,7 @@ def flow_to_coords(flow: torch.Tensor):
     B, _, H, W = flow.shape
     xx = torch.arange(0, W, device=flow.device, requires_grad=False)
     yy = torch.arange(0, H, device=flow.device, requires_grad=False)
-    coords = torch.meshgrid(yy, xx)
+    coords = torch.meshgrid(yy, xx, indexing="ij")
     coords = torch.stack(coords[::-1], dim=0).float()
     coords = coords[None].repeat(B, 1, 1, 1) + flow
     return coords
