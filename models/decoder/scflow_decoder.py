@@ -55,7 +55,7 @@ class SCFlowDecoder(BaseModule):
         detach_pose: bool,
         mask_flow: bool,
         mask_corr: bool,
-        pose_head_cfg: dict(),
+        pose_head_cfg: dict,
         depth_transform: str='exp',
         detach_depth_for_xy: bool=False,
         corr_lookup_cfg: dict = dict(align_corners=True),
@@ -156,7 +156,7 @@ class SCFlowDecoder(BaseModule):
         """Forward function for RAFTDecoder.
 
         Args:
-            feat1 (Tensor): The feature from the first input image, shape (N, C, H, W)
+            feat1 (Tensor): The feature from the first input image, shape (N, C, H, W), this is the rendered one
             feat2 (Tensor): The feature from the second input image, shape (N, C, H, W).
             h_feat (Tensor): The hidden state for GRU cell, shape (N, C, H, W).
             cxt_feat (Tensor): The contextual feature from the first image, shape (N, C, H, W).

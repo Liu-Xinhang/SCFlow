@@ -15,7 +15,7 @@ from ..utils import Renderer, get_flow_from_delta_pose_and_depth, filter_flow_by
 from ..utils.utils import simple_forward_warp, tensor_image_to_cv2, Warp
 
 @REFINERS.register_module()
-class BaseRefiner(BaseModule):
+class BaseRefiner(BaseModule): ## 使用mmcv需要继承BaseModule
     def __init__(self, 
                 encoder: Optional[Dict]=None,
                 decoder: Optional[Dict]=None,
@@ -30,11 +30,11 @@ class BaseRefiner(BaseModule):
         super().__init__(init_cfg)
         self.seperate_encoder = seperate_encoder
         if encoder is not None:
-            if self.seperate_encoder:
+            if self.seperate_encoder: # 对于渲染和真实的图像使用不同的编码器
                 self.render_encoder = build_encoder(encoder)
                 self.real_encoder = build_encoder(encoder)
             else:
-                encoder_model = build_encoder(encoder)
+                encoder_model = build_encoder(encoder) # 对于渲染和真实的图像使用相同的编码器
                 self.render_encoder = encoder_model
                 self.real_encoder = encoder_model
         if decoder is not None:
@@ -46,7 +46,7 @@ class BaseRefiner(BaseModule):
         self.max_flow = max_flow
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
-        self.train_cycle_num = self.train_cfg.get('cycles', 1)
+        self.train_cycle_num = self.train_cfg.get('cycles', 1) # 训练时的循环次数，如果在config文件中没有指定，那么就是1
         self.train_grad_clip = self.train_cfg.get('grad_norm', None)
         self.test_cycle_num = self.test_cfg.get('cycles', 1)
         if render_augmentations is not None:
@@ -66,15 +66,15 @@ class BaseRefiner(BaseModule):
 
 
     def to(self, device):
-        super().to(device)
+        super().to(device) ## 确保模型的参数在指定的设备上
         if self.renderer is not None:
-            self.renderer.to(device)
+            self.renderer.to(device) ## 把pytorch3d移到指定设备上
         
     def loss(self, data_batch):
-        raise NotImplementedError
+        raise NotImplementedError ## 由子类实现
     
     def forward_single_view(self, data):
-        raise NotImplementedError
+        raise NotImplementedError ## 由子类实现
 
     def format_data_test(self, data_batch):
         real_images, annots, meta_infos = data_batch['img'], data_batch['annots'], data_batch['img_metas']
@@ -101,7 +101,7 @@ class BaseRefiner(BaseModule):
         normalize_mean, normalize_std = img_norm_cfg['mean'], img_norm_cfg['std']
         normalize_mean = torch.Tensor(normalize_mean).view(1, 3, 1, 1).to(real_images[0].device) / 255.
         normalize_std = torch.Tensor(normalize_std).view(1, 3, 1, 1).to(real_images[0].device) / 255.
-        rendered_images = (rendered_images - normalize_mean)/normalize_std
+        rendered_images = (rendered_images - normalize_mean)/normalize_std ## 归一化送给网络
         output = dict(
             real_images = real_images,
             rendered_images = rendered_images,
@@ -227,7 +227,7 @@ class BaseRefiner(BaseModule):
             log_vars_list.append(log_vars)
             log_imgs_list.append(log_imgs)
 
-            if i == train_cycle_num - 1:
+            if i == train_cycle_num - 1: #？ 为什么这里要跳过
                 continue
             
             optimizer.zero_grad()

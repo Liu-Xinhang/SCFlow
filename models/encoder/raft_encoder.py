@@ -17,12 +17,10 @@ class RAFTEncoder(BaseModule):
     Args:
         in_channels (int): Number of input channels. Defaults to 3.
         out_channels (int): Number of output channels. Defaults to 128.
-        net_type (str): The type of this sub-module, if net_type is Basic, the
-            residual block is BasicBlock, if net_type is Small, the residual
-            block is Bottleneck. Defaults to 'Basic'.
+        net_type (str): The type of this sub-module, if net_type is 
+            Basic, the residual block is BasicBlock, if net_type is Small, the residual block is Bottleneck. Defaults to 'Basic'.
         stem_channels (int, optional): Number of stem channels. If
-            stem_channels is None, it will be set based on net_type. If the
-            net_type is Basic, the stem_channels is 64, otherwise the
+            stem_channels is None, it will be set based on net_type. If the net_type is Basic, the stem_channels is 64, otherwise the
             stem_channels is 32. Defaults to None.
         base_channels (Sequence[int], optional):  Number of base channels of
             res layer. If base_channels is None, it will be set based on
@@ -46,8 +44,7 @@ class RAFTEncoder(BaseModule):
         norm_cfg (dict, optional): Config dict for each normalization layer.
             Defaults to dict(type='BN', requires_grad=True).
         norm_eval (bool): Whether to set norm layers to eval mode, namely,
-            freeze running stats (mean and var). Note: Effect on Batch Norm
-            and its variants only. Defaults to False.
+            freeze running stats (mean and var). Note: Effect on Batch Norm and its variants only. Defaults to False.
         plugins (list[dict], optional): List of plugins for stages, each dict
             contains:
 

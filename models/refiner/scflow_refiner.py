@@ -69,7 +69,7 @@ class SCFlowRefiner(BaseRefiner):
     
     def freeze_encoder(self):
         for m in self.real_encoder.modules():
-            m.eval()
+            m.eval() ## eval() 和requires_grad = False两者控制不同的表现，这也是为什么在评测的时候，我们既需要设置eval状态，也需要设置with torch.no_grad()的原因
             for param in m.parameters():
                 param.requires_grad = False
         for m in self.render_encoder.modules():
@@ -80,7 +80,7 @@ class SCFlowRefiner(BaseRefiner):
     def freeze_bn(self) -> None:
         for m in self.modules():
             if isinstance(m, nn.BatchNorm2d):
-                m.eval()
+                m.eval() ## 对于batchnorm来说，它本身不涉及梯度的问题，我们只需要设置它的状态为eval即可，这样它就使用全局的normalize而不是当前batch的normalize参数了。
     def to(self, device):
         super().to(device)
         self.pose_loss_func.to(device)
@@ -100,7 +100,7 @@ class SCFlowRefiner(BaseRefiner):
         """
         real_feat = self.real_encoder(real_images)
         render_feat = self.render_encoder(render_images)
-        cxt_feat = self.context(render_images)
+        cxt_feat = self.context(render_images) ## context feature来自于render images
 
         h_feat, cxt_feat = torch.split(
             cxt_feat, [self.h_channels, self.cxt_channels], dim=1)
