@@ -1,4 +1,4 @@
-_base_ = '../refine_datasets/ycbv_real.py'
+_base_ = '../refine_datasets/ycbv_real_depth.py'
 
 dataset_root = 'data/ycbv'
 
@@ -137,7 +137,7 @@ evaluation=dict(interval=5000,
                 rule='greater'
             )
 runner = dict(type='IterBasedRunner', max_iters=100000)
-num_gpus = 4
+num_gpus = 1
 checkpoint_config = dict(interval=10000, by_epoch=False)
 log_config=dict(interval=50, 
                 hooks=[

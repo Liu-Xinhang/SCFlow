@@ -4,12 +4,44 @@ import cv2
 import random
 import numpy as np
 
+
 from scipy.spatial.transform import Rotation
 
 from .builder import PIPELINES
 from ..pose import eval_rot_error, remap_pose, eval_tran_error, load_mesh
 from collections.abc import Sequence
 
+@PIPELINES.register_module()
+class UnprojectDepth:
+    def __init__(self, depth_factor) -> None:
+        self.xmap = self.ymap = None
+        self.depth_factor = depth_factor
+
+    def __call__(self, results):
+        obj_num = len(results['gt_depths'])
+        dpt_3ds = []
+        for i in range(obj_num):
+            dpt = results['gt_depths'][i] ## 这里只取出0是因为我们mask和depth都是一个列表，但是这个列表实际上只有一个元素
+            if len(dpt.shape) > 2:
+                dpt = dpt[:, :, 0]
+            if self.xmap is None:
+                y, x = dpt.shape
+                self.xmap, self.ymap = np.meshgrid(np.arange(x), np.arange(y), indexing='xy')
+                
+            K = results['k'][i]
+            # msk = results['gt_masks'][i] 
+            msk = (dpt > 1e-8).astype(np.float32) ## mask来自于depth本身
+            dpt = dpt.astype(np.float32) * self.depth_factor
+            row = (self.ymap - K[0][2]) * dpt / K[0][0]
+            col = (self.xmap - K[1][2]) * dpt / K[1][1]
+            dpt_3d = np.concatenate(
+                (row[..., None], col[..., None], dpt[..., None]), axis=2
+            )
+            dpt_3d = dpt_3d * msk[:, :, None]
+            dpt_3ds.append(dpt_3d.reshape(-1, 3)) # H*W, 3
+        results['dpt_3d'] = dpt_3ds
+        return results
+    
 
 
 def update_transform_matrix(transform_matrix, results):

@@ -123,10 +123,18 @@ class ToTensor:
             else:
                 results[key] = DataContainer(to_tensor(img), stack=False)
         
-        if 'depths' in results:
-            depths = results['depths']
-            depths = np.stack(depths, axis=0)
-            results['depths'] = depths
+        if results.get('depth_fields', False):
+            for field in results.get('depth_fields', ['depths']):
+                if isinstance(results[field], (list, tuple)):
+                    depths = results[field]
+                    depths = np.stack(depths, axis=0)
+                    results[field] = depths
+        
+        if results.get('dpt_3d', False):
+            dpt_3d = results['dpt_3d']
+            if isinstance(dpt_3d, (list, tuple)):
+                dpt_3d = np.stack(dpt_3d, axis=0)
+            results['dpt_3d'] = dpt_3d
         
         for key in results.get('annot_fields'):
             if key not in results or 'masks' in key:

@@ -187,7 +187,7 @@ class SCFlowRefiner(BaseRefiner):
         init_add_error_mean, init_add_error_std = data['init_add_error_mean'], data['init_add_error_std']
         init_log_info = dict(init_add_mean=init_add_error_mean.item(), init_add_std=init_add_error_std.item())
         log_vars.update(init_log_info)
-
+        ## TODO 在这里之后去加入point的模块
         gt_rotations, gt_translations = data['gt_rotations'], data['gt_translations']
         ref_rotations, ref_translations = data['ref_rotations'], data['ref_translations']
         real_images, rendered_images = data['real_images'], data['rendered_images']

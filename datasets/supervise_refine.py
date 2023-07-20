@@ -111,6 +111,7 @@ class SuperviseTrainDataset(BaseDataset):
     
     def getitem(self, index):
         img_path = self.img_files[index]
+        depth_path = img_path.replace("/rgb/", "/depth/")
         _,  seq_name, _, img_name = img_path.rsplit('/', 3)
         img_id = int(osp.splitext(img_name)[0])
         
@@ -191,6 +192,7 @@ class SuperviseTrainDataset(BaseDataset):
         results_dict['pose_fields'] = [('gt_rotations', 'gt_translations', 'gt_keypoints_3d'), ('ref_rotations', 'ref_translations', 'ref_keypoints_3d')]
         results_dict['bbox_fields'] = ['gt_bboxes', 'ref_bboxes']
         results_dict['mask_fields'] = ['gt_masks']
+        results_dict['depth_fields'] = ['gt_depths']
         results_dict['label_fields'] = ['labels']
         
         results_dict['annot_fields'] = results_dict['bbox_fields'] + results_dict['mask_fields'] + results_dict['label_fields'] \
@@ -207,6 +209,7 @@ class SuperviseTrainDataset(BaseDataset):
         results_dict['gt_mask_path'] = gt_mask_paths
         results_dict['k'] = results_dict['ori_k'] = k
         results_dict['img_path'] = img_path
+        results_dict["depth_path"] = depth_path
         results_dict = self.transformer(results_dict)
 
         return results_dict

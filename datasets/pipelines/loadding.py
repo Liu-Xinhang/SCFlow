@@ -4,6 +4,26 @@ from .builder import PIPELINES
 from ..mask import BitmapMasks
 
 
+@PIPELINES.register_module()
+class LoadDepths:
+    def __init__(self,
+                to_float32=False,
+                file_client_args=dict(backend='disk')):
+        self.to_float32 = to_float32
+        self.file_client_args = file_client_args.copy()
+        self.file_client = None
+
+    def __call__(self, results):
+        if self.file_client is None:
+            self.file_client = mmcv.FileClient(**self.file_client_args)
+        
+        depth_path = results['depth_path']
+        img_bytes = self.file_client.get(filepath=depth_path)
+        depth = mmcv.imfrombytes(img_bytes, flag="unchanged") # H, W
+        #TODO: 增加对于depth的增广，例如补洞
+        assert depth.shape == results['ori_shape'][:2]
+        results["gt_depths"] = depth.astype(np.float32)
+        return results
 
 @PIPELINES.register_module()
 class LoadImages:
@@ -26,7 +46,7 @@ class LoadImages:
         if self.to_float32:
             img = img.astype(np.float32)
         results['img'] = img
-        results['img_shape'] = img.shape
+        results['img_shape'] = img.shape # H, W, 3
         results['ori_shape'] = img.shape
         return results
 

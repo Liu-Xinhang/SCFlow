@@ -13,6 +13,7 @@ from ..encoder import build_encoder
 from ..decoder import build_decoder
 from ..utils import Renderer, get_flow_from_delta_pose_and_depth, filter_flow_by_mask, cal_epe
 from ..utils.utils import simple_forward_warp, tensor_image_to_cv2, Warp
+from functorch import vmap
 
 @REFINERS.register_module()
 class BaseRefiner(BaseModule): ## 使用mmcv需要继承BaseModule
@@ -49,6 +50,7 @@ class BaseRefiner(BaseModule): ## 使用mmcv需要继承BaseModule
         self.train_cycle_num = self.train_cfg.get('cycles', 1) # 训练时的循环次数，如果在config文件中没有指定，那么就是1
         self.train_grad_clip = self.train_cfg.get('grad_norm', None)
         self.test_cycle_num = self.test_cfg.get('cycles', 1)
+        self.xmap, self.ymap = torch.meshgrid(torch.arange(256), torch.arange(256), indexing='xy') #!暂时指定为256
         if render_augmentations is not None:
             augmentations = []
             for augmentation in render_augmentations:
@@ -62,13 +64,34 @@ class BaseRefiner(BaseModule): ## 使用mmcv需要继承BaseModule
             )
         else:
             self.render_augmentation = None
+
+    def _unproject(self, dpt, K):             
+            msk = (dpt > 1e-8).float() ## mask来自于depth本身
+            row = (self.ymap - K[0][2]) * dpt / K[0][0]
+            col = (self.xmap - K[1][2]) * dpt / K[1][1]
+            dpt_3d = torch.concat(
+                (row[..., None], col[..., None], dpt[..., None]), axis=2
+            )
+            dpt_3d = dpt_3d * msk[:, :, None]
+            return dpt_3d.reshape(-1, 3) # H*W, 3
     
+    # def unproject(self, rendered_depths, internel_k):
+    #     dpt_3ds = []
+        
+    #     for i in range(rendered_depths.shape[0]):
+    #         dpt_3d = self._unproject(rendered_depths[i], internel_k[i])
+    #         dpt_3ds.append(dpt_3d) # H*W, 3
+    #     dpt_3ds = torch.stack(dpt_3ds, axis=0) # B, H*W, 3
+    #     return dpt_3ds
 
 
     def to(self, device):
         super().to(device) ## 确保模型的参数在指定的设备上
         if self.renderer is not None:
             self.renderer.to(device) ## 把pytorch3d移到指定设备上
+        self.xmap = self.xmap.to(device)
+        self.ymap = self.ymap.to(device)
+        
         
     def loss(self, data_batch):
         raise NotImplementedError ## 由子类实现
@@ -156,6 +179,7 @@ class BaseRefiner(BaseModule): ## 使用mmcv需要继承BaseModule
         rendered_depths = rendered_fragments.zbuf
         rendered_depths = rendered_depths[..., 0]
         rendered_masks = (rendered_depths > 0).to(torch.float32)
+
         if self.render_augmentation is not None:
             rendered_images = self.render_augmentation(rendered_images)
 
@@ -182,13 +206,18 @@ class BaseRefiner(BaseModule): ## 使用mmcv需要继承BaseModule
             init_trans_error_mean = init_trans_error_mean,
             init_trans_error_std = init_trans_error_std,
         )
+        if 'gt_depths' in annots:
+            rendered_dpt_3d = vmap(self._unproject, 0, 0)(rendered_depths, internel_k)
+            output['rendered_dpt_3d'] = rendered_dpt_3d
+            output['dpt_3d'] = annots["dpt_3d"]
+            output['gt_depths'] = annots['gt_depths']
+
         if 'gt_masks' in annots:
             gt_masks = [mask.to_tensor(dtype=torch.bool, device=gt_rotations[0].device) for mask in annots['gt_masks']]
             gt_masks = torch.cat(gt_masks, axis=0)
             output['gt_masks'] = gt_masks
-            return output
-        else:
-            return output
+
+        return output
 
 
 

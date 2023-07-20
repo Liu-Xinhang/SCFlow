@@ -108,7 +108,7 @@ class Renderer(nn.Module):
         self.sigma = sigma
         self.background_color = background_color
         self.shader = shader_mapping[self.shader_type][self.blending]
-        self.load_meshes(mesh_dir, ".obj")
+        self.load_meshes(mesh_dir, ".obj") #! 修改为ply强制找不到文件这样就可以跳过加载的过程了
         self.default_lights = default_lights
         self.seperate_lights = seperate_lights
         self.bin_size = bin_size

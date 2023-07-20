@@ -7,6 +7,9 @@ from ..pose import load_mesh, eval_rot_error
 
 @PIPELINES.register_module()
 class PoseJitter:
+    """
+    用于online的调整我们的pose的jitter，这样就可以当作是不准确的init了。
+    """
     def __init__(self, 
                 jitter_angle_dis:list,
                 jitter_x_dis: list,
